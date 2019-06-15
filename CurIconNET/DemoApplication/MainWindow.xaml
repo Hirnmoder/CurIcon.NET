@@ -5,8 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DemoApplication"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="400" Width="600">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <GroupBox Grid.Column="0" Grid.Row="0" Header="Load and Save" Background="#33446688">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="Load Cursor or Icon:" Margin="2"/>
+                        <Button DockPanel.Dock="Right" Content="Load" Click="ButtonLoad_Click" Margin="2" Padding="5,0" />
+                        <Button DockPanel.Dock="Right" Content="..." Click="ButtonPathLoad_Click" Margin="2" Padding="5,0" />
+                        <TextBox Margin="2" x:Name="tbLoadPath" AcceptsReturn="False" />
+                    </DockPanel>
+                    <TextBlock Name="txtType" Margin="2" Text="Type: ---" />
+                    <Border Background="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Image x:Name="img" Stretch="None" />
+                    </Border>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="Save Cursor or Icon:" Margin="2" />
+                        <Button DockPanel.Dock="Right" Content="..." Click="ButtonSavePath_Click" Margin="2" Padding="5,0" />
+                        <TextBox Margin="2" x:Name="tbSavePath" />
+                    </DockPanel>
+                    <DockPanel LastChildFill="False">
+                        <Button DockPanel.Dock="Right" Content="Save as Cursor" Click="ButtonSaveCursor_Click" Margin="2" Padding="5,0" />
+                        <Button DockPanel.Dock="Right" Content="Save as Icon" Click="ButtonSaveIcon_Click" Margin="2" Padding="5,0" />
+                    </DockPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </GroupBox>
     </Grid>
 </Window>
