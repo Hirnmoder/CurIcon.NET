@@ -25,6 +25,15 @@ namespace CurIconNET
 
 
         /// <summary>
+        /// Creates an empty <see cref="BitmapSourceCurIcon"/>.
+        /// </summary>
+        /// <param name="fileType">The desired <see cref="FileType"/> for this instance. Should not be <see cref="FileType.Undefined"/>.</param>
+        public BitmapSourceCurIcon(FileType fileType) : base(fileType)
+        {
+            this._Frames = new List<PngFrame>();
+        }
+
+        /// <summary>
         /// Creates a <see cref="BitmapSourceCurIcon"/> from a given stream.
         /// </summary>
         /// <param name="constructionStream">Construction stream.</param>
@@ -51,7 +60,7 @@ namespace CurIconNET
         /// <exception cref="ArgumentNullException" />
         public BitmapSourceCurIcon(byte[] constructionBytes, bool throwOnFramecountMismatch = false) : base(FileType.Undefined)
         {
-            using(var ms = new MemoryStream(constructionBytes))
+            using (var ms = new MemoryStream(constructionBytes))
             {
                 Construct(ms);
             }
@@ -102,11 +111,11 @@ namespace CurIconNET
 
             var decoder = BitmapDecoder.Create(s, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
 
-            if(this.Type == FileType.Icon)
+            if (this.Type == FileType.Icon)
             {
                 this._Frames = decoder.Frames.Select(f => new PngFrame(f, 0, 0)).ToList();
             }
-            else if(this.Type == FileType.Cursor)
+            else if (this.Type == FileType.Cursor)
             {
                 this._Frames = new List<PngFrame>();
 
@@ -167,11 +176,6 @@ namespace CurIconNET
 
             ushort fileTypeFlag = (ushort)(desiredFileType == FileType.Icon ? 1 : 2);
 
-            for(int i = 0; i < frameCount; i++)
-            {
-                this._Frames[i].CreateBytes();
-            }
-
             uint addedSizes = 0;
 
             // Calculate Offsets
@@ -201,17 +205,30 @@ namespace CurIconNET
 
         public int FrameCount => this._Frames.Count;
 
-        public BitmapSource this[int index]
+        public PngFrame this[int index]
         {
             get
             {
-                return GetFrame(index);
+                return GetPngFrame(index);
+            }
+            set
+            {
+                if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+                if (index > this.FrameCount) throw new ArgumentOutOfRangeException(nameof(index));
+                if(index == this.FrameCount)
+                {
+                    AddPngFrame(value);
+                }
+                else
+                {
+                    this._Frames[index] = value;
+                }
             }
         }
 
 
 
-        public BitmapSource GetFrame(int index)
+        public BitmapSource GetBitmapFrame(int index)
         {
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
             if (index >= FrameCount) throw new ArgumentOutOfRangeException(nameof(index));
@@ -223,6 +240,45 @@ namespace CurIconNET
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
             if (index >= FrameCount) throw new ArgumentOutOfRangeException(nameof(index));
             return this._Frames[index];
+        }
+
+
+        /// <summary>
+        /// Adds a <see cref="PngFrame"/> to the internal list.
+        /// </summary>
+        /// <param name="frame">A <see cref="PngFrame"/> instance to insert.</param>
+        /// <param name="index">Specific index at which <paramref name="frame"/> should be inserted, default is -1 which will lead to inserting at the end of the list.</param>
+        /// <exception cref="ArgumentOutOfRangeException" />
+        public void AddPngFrame(PngFrame frame, int index = -1)
+        {
+            if (index == -1)
+            {
+                this._Frames.Add(frame);
+            }
+            else
+            {
+                this._Frames.Insert(index, frame);
+            }
+        }
+
+        /// <summary>
+        /// Removes a specified <see cref="PngFrame"/> instance.
+        /// </summary>
+        /// <param name="frame">The element to be removed.</param>
+        /// <returns>True if succeeded, otherwise false.</returns>
+        public bool RemovePngFrame(PngFrame frame)
+        {
+            return this._Frames.Remove(frame);
+        }
+
+        /// <summary>
+        /// Removes a <see cref="PngFrame"/> instance at the specified <paramref name="index"/>.
+        /// </summary>
+        /// <param name="index">The index of the element to be removed.</param>
+        /// <exception cref="ArgumentOutOfRangeException" />
+        public void RemovePngFrameAt(int index)
+        {
+            this._Frames.RemoveAt(index);
         }
     }
 }

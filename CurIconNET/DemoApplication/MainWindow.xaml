@@ -40,5 +40,27 @@
                 </StackPanel>
             </ScrollViewer>
         </GroupBox>
+        <GroupBox Grid.Column="1" Grid.Row="0" Header="Construct" Background="#33446688">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <DockPanel LastChildFill="True">
+                        <Button DockPanel.Dock="Left" Content="&lt;" Click="ButtonPrev_Click" Margin="2" Padding="5,0" />
+                        <Button DockPanel.Dock="Right" Content="&gt;" Click="ButtonNext_Click" Margin="2" Padding="5,0" />
+                        <Border Background="White" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image x:Name="imgConstruct" Stretch="Uniform" MaxWidth="200" MaxHeight="200" />
+                        </Border>
+                    </DockPanel>
+                    <TextBlock Name="txtFrame" TextAlignment="Center" Text="Frame (0 of 0)" />
+                    <DockPanel LastChildFill="False" Margin="10,0">
+                        <Button DockPanel.Dock="Left" Content="Add Frame" Click="ButtonAdd_Click" Margin="2" Padding="5,0" />
+                        <Button DockPanel.Dock="Right" Content="Remove Frame" Click="ButtonRemove_Click" Margin="2" Padding="5,0" />
+                    </DockPanel>
+                    <DockPanel LastChildFill="False" Margin="10,0">
+                        <Button DockPanel.Dock="Left" Content="Save as Icon" Click="ButtonSaveIcon2_Click" Margin="2" Padding="5,0" />
+                        <Button DockPanel.Dock="Right" Content="Save as Cursor" Click="ButtonSaveCursor2_Click" Margin="2" Padding="5,0" />
+                    </DockPanel>
+                </StackPanel>
+            </ScrollViewer>
+        </GroupBox>
     </Grid>
 </Window>

@@ -10,9 +10,34 @@ namespace CurIconNET.Internals
 {
     public class PngFrame
     {
-        internal BitmapFrame BitmapFrame { get; private set; }
 
-        internal byte[] PngFile { get; private set; }
+        private BitmapFrame _BitmapFrame;
+        public BitmapFrame BitmapFrame
+        {
+            get
+            {
+                if(_BitmapFrame == null && _PngFile != null)
+                {
+                    CreateFrame();
+                }
+                return _BitmapFrame;
+            }
+        }
+
+
+        private byte[] _PngFile;
+        public byte[] PngFile
+        {
+            get
+            {
+                if(_PngFile == null && _BitmapFrame != null)
+                {
+                    CreateBytes();
+                }
+                return _PngFile;
+            }
+        }
+
         public byte Width { get; private set; }
         public byte Height { get; private set; }
 
@@ -27,7 +52,7 @@ namespace CurIconNET.Internals
 
         public PngFrame(BitmapFrame bitmapFrame, ushort hLeft, ushort hTop)
         {
-            this.BitmapFrame = bitmapFrame;
+            this._BitmapFrame = bitmapFrame;
             this.Width = 0;
             this.Height = 0;
             this.HLeft = hLeft;
@@ -35,9 +60,9 @@ namespace CurIconNET.Internals
             this.Offset = 0;
         }
 
-        internal PngFrame(byte[] pngFile, int width, int height, ushort hLeft, ushort hTop)
+        public PngFrame(byte[] pngFile, int width, int height, ushort hLeft, ushort hTop)
         {
-            this.PngFile = pngFile;
+            this._PngFile = pngFile;
 
             if (width > 256) throw new ArgumentException(nameof(width) + " must be less or equal to 256.");
             if (height > 256) throw new ArgumentException(nameof(height) + " must be less or equal to 256.");
@@ -58,7 +83,7 @@ namespace CurIconNET.Internals
         /// <returns>True if the action succeeded, otherwise false.</returns>
         public bool SetHotspot(ushort left, ushort top)
         {
-            if(this.PngFile == null || (left <= this.Width && top <= this.Height))
+            if(this._PngFile == null || (left <= this.Width && top <= this.Height))
             {
                 this.HLeft = left;
                 this.HTop = top;
@@ -67,12 +92,11 @@ namespace CurIconNET.Internals
             return false;
         }
 
-        internal void CreateBytes()
+        private void CreateBytes()
         {
-            if (this.BitmapFrame == null && this.PngFile != null) return;
-            if (this.BitmapFrame == null && this.PngFile == null) throw new InvalidOperationException(nameof(this.BitmapFrame) + " is null.");
+            if (this._BitmapFrame == null) throw new InvalidOperationException(nameof(this.BitmapFrame) + " is null.");
 
-            var frame = this.BitmapFrame;
+            var frame = this._BitmapFrame;
             // We need to crop
             if (frame.PixelWidth > 256 || frame.PixelHeight > 256)
             {
@@ -91,7 +115,17 @@ namespace CurIconNET.Internals
                 enc.Frames.Clear();
                 enc.Frames.Add(frame);
                 enc.Save(ms);
-                this.PngFile = ms.ToArray();
+                this._PngFile = ms.ToArray();
+            }
+        }
+
+        private void CreateFrame()
+        {
+            if (this._PngFile == null) throw new InvalidOperationException(nameof(this.PngFile) + " is null.");
+
+            using (var ms = new MemoryStream(this._PngFile))
+            {
+                this._BitmapFrame =  BitmapFrame.Create(ms, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
             }
         }
 

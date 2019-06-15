@@ -1,4 +1,5 @@
 ﻿using CurIconNET;
+using CurIconNET.Internals;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,9 @@ namespace DemoApplication
     /// </summary>
     public partial class MainWindow : Window
     {
-        private BitmapSourceCurIcon curicon = null;
+        private BitmapSourceCurIcon lsCI = null;
+        private BitmapSourceCurIcon coCI = null;
+        private int currentFrame = -1;
 
         public MainWindow()
         {
@@ -33,20 +36,22 @@ namespace DemoApplication
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
+            coCI = new BitmapSourceCurIcon(FileType.Icon);
         }
 
+        #region Load and Save
         private void ButtonLoad_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 using (FileStream fs = new FileStream(tbLoadPath.Text, FileMode.Open, FileAccess.Read))
                 {
-                    curicon = new BitmapSourceCurIcon(fs, true);
+                    lsCI = new BitmapSourceCurIcon(fs, true);
                 }
-                txtType.Text = $"Type: {curicon.Type.ToString()}, Frame(s): {curicon.FrameCount}";
-                if(curicon.FrameCount > 0)
+                txtType.Text = $"Type: {lsCI.Type.ToString()}, Frame(s): {lsCI.FrameCount}";
+                if (lsCI.FrameCount > 0)
                 {
-                    img.Source = curicon[0];
+                    img.Source = lsCI[0].BitmapFrame;
                 }
             }
             catch (Exception ex)
@@ -83,21 +88,21 @@ namespace DemoApplication
 
         private void ButtonSaveIcon_Click(object sender, RoutedEventArgs e)
         {
-            Save(FileType.Icon);
+            Save(lsCI, FileType.Icon, tbSavePath.Text);
         }
 
         private void ButtonSaveCursor_Click(object sender, RoutedEventArgs e)
         {
-            Save(FileType.Cursor);
+            Save(lsCI, FileType.Cursor, tbSavePath.Text);
         }
 
-        private void Save(FileType fileType)
+        private void Save(BitmapSourceCurIcon bsci, FileType fileType, string path)
         {
             try
             {
-                using (FileStream fs = new FileStream(tbSavePath.Text, FileMode.Create, FileAccess.ReadWrite))
+                using (FileStream fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite))
                 {
-                    curicon?.Save(fs, fileType, true);
+                    bsci?.Save(fs, fileType, true);
                 }
             }
             catch (Exception ex)
@@ -105,5 +110,89 @@ namespace DemoApplication
                 MessageBox.Show(ex.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        #endregion
+
+        #region Construct
+
+        private void UpdateLabelAndImage()
+        {
+            if (coCI.FrameCount > 0)
+            {
+                txtFrame.Text = $"Frame ({currentFrame + 1} of {coCI.FrameCount})";
+                imgConstruct.Source = coCI[currentFrame].BitmapFrame;
+            }
+            else
+            {
+                txtFrame.Text = $"Frame (0 of 0)";
+                imgConstruct.Source = null;
+            }
+            imgConstruct.InvalidateArrange();
+        }
+
+        private void ButtonPrev_Click(object sender, RoutedEventArgs e)
+        {
+            if (coCI.FrameCount == 0) return;
+            if (currentFrame > 0) currentFrame--;
+            UpdateLabelAndImage();
+        }
+
+        private void ButtonNext_Click(object sender, RoutedEventArgs e)
+        {
+            if (coCI.FrameCount == 0) return;
+            if (currentFrame < coCI.FrameCount - 1) currentFrame++;
+            UpdateLabelAndImage();
+        }
+
+        private void ButtonAdd_Click(object sender, RoutedEventArgs e)
+        {
+            var ofd = new OpenFileDialog();
+            ofd.Filter = "Pictures|*.png;*.jpg;*.jpeg;*.gif;*.tif;*.tiff|All files|*.*";
+            ofd.Multiselect = false;
+            ofd.Title = "Select an image.";
+            if (ofd.ShowDialog() == true)
+            {
+                try
+                {
+                    coCI.AddPngFrame(new PngFrame(File.ReadAllBytes(ofd.FileName), 0, 0, 0, 0));
+                    currentFrame = coCI.FrameCount - 1;
+                    UpdateLabelAndImage();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private void ButtonRemove_Click(object sender, RoutedEventArgs e)
+        {
+            if (coCI.FrameCount == 0) return;
+            coCI.RemovePngFrameAt(currentFrame);
+            currentFrame = Math.Max(currentFrame - 1, 0);
+            UpdateLabelAndImage();
+        }
+
+        private void ButtonSaveIcon2_Click(object sender, RoutedEventArgs e)
+        {
+            Save2(FileType.Icon);
+        }
+
+        private void Save2(FileType type)
+        {
+            var sfd = new SaveFileDialog();
+            sfd.Filter = "Icons and Cursors|*.ico;*.cur|All files|*.*";
+            sfd.Title = "Select a save destination";
+            if (sfd.ShowDialog() == true)
+            {
+                Save(coCI, type, sfd.FileName);
+            }
+        }
+
+        private void ButtonSaveCursor2_Click(object sender, RoutedEventArgs e)
+        {
+            Save2(FileType.Cursor);
+        }
+
+        #endregion
     }
 }
