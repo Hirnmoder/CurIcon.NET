@@ -60,12 +60,38 @@ namespace CurIconNET.Internals
             this.Offset = 0;
         }
 
-        public PngFrame(byte[] pngFile, int width, int height, ushort hLeft, ushort hTop)
+        public PngFrame(byte[] pngFile, ushort hLeft, ushort hTop, bool autocrop)
         {
             this._PngFile = pngFile;
+            CreateFrame();
+            this._PngFile = null;
 
-            if (width > 256) throw new ArgumentException(nameof(width) + " must be less or equal to 256.");
-            if (height > 256) throw new ArgumentException(nameof(height) + " must be less or equal to 256.");
+            int width = this.BitmapFrame.PixelWidth;
+            int height = this.BitmapFrame.PixelHeight;
+
+            bool needsCrop = false;
+
+            if (width > 256)
+            {
+                needsCrop = true;
+                if(!autocrop) throw new ArgumentException(nameof(width) + " must be less or equal to 256.");
+            }
+            if (height > 256)
+            {
+                needsCrop = true;
+                if (!autocrop) throw new ArgumentException(nameof(height) + " must be less or equal to 256.");
+            }
+
+            if (needsCrop)
+            {
+                CreateBytes();
+                this._BitmapFrame = null;
+                CreateFrame();
+            }
+
+            width = this.BitmapFrame.PixelWidth;
+            height = this.BitmapFrame.PixelHeight;
+
             this.Width = (byte)width;
             this.Height = (byte)height;
 

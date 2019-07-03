@@ -205,6 +205,12 @@ namespace CurIconNET
 
         public int FrameCount => this._Frames.Count;
 
+        /// <summary>
+        /// Gets or sets a <see cref="PngFrame"/> at the specified index.
+        /// </summary>
+        /// <param name="index">The zero-based index.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException" />
         public PngFrame this[int index]
         {
             get

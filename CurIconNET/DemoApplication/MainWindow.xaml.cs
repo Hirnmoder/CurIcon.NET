@@ -153,7 +153,7 @@ namespace DemoApplication
             {
                 try
                 {
-                    coCI.AddPngFrame(new PngFrame(File.ReadAllBytes(ofd.FileName), 0, 0, 0, 0));
+                    coCI.AddPngFrame(new PngFrame(File.ReadAllBytes(ofd.FileName), 0, 0, true));
                     currentFrame = coCI.FrameCount - 1;
                     UpdateLabelAndImage();
                 }
