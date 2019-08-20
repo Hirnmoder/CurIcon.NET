@@ -4,6 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace CurIconNET.Internals
@@ -116,6 +119,77 @@ namespace CurIconNET.Internals
                 return true;
             }
             return false;
+        }
+
+
+        /// <summary>
+        /// Rotates this <see cref="PngFrame"/> with a given rotation angle.
+        /// </summary>
+        /// <param name="rotationDegrees">Rotation angle in degrees.</param>
+        /// <param name="scalingMode"><see cref="BitmapScalingMode"/> used for rendering the rotated frame. Defaults to <see cref="BitmapScalingMode.NearestNeighbor"/>.</param>
+        /// <exception cref="InvalidOperationException" />
+        /// <exception cref="ArgumentException" />
+        /// <exception cref="NotSupportedException" />
+        public void RotateFrame(double rotationDegrees, BitmapScalingMode scalingMode = BitmapScalingMode.NearestNeighbor)
+        {
+            var rotationRad = rotationDegrees / 180.0 * Math.PI;
+
+            var frame = this.BitmapFrame;
+
+            var transform = new RotateTransform(rotationDegrees);
+            var w = frame.PixelWidth;
+            var h = frame.PixelHeight;
+
+            var newW = (int)(Math.Abs(w * Math.Sin(rotationRad)) + Math.Abs(h * Math.Cos(rotationRad)));
+            var newH = (int)(Math.Abs(w * Math.Cos(rotationRad)) + Math.Abs(h * Math.Sin(rotationRad)));
+
+            if (newW > 256) throw new InvalidOperationException(nameof(this.Width) + " is too big to be rotated.");
+            if (newH > 256) throw new InvalidOperationException(nameof(this.Height) + " is too big to be rotated.");
+
+            transform.CenterX = w / 2;
+            transform.CenterY = h / 2;
+
+            var transformGroup = new TransformGroup();
+            transformGroup.Children.Add(transform);
+            transformGroup.Children.Add(new TranslateTransform((newW - w) / 2.0, (newH - h) / 2));
+
+            var origHotspot = new Point(this.HLeft, this.HTop);
+            var transformedHotspot = transformGroup.Transform(origHotspot);
+
+            var image = new Image()
+            {
+                Source = frame,
+                RenderTransform = transformGroup,
+                Width = w,
+                Height = h,
+                Stretch = Stretch.None,
+                UseLayoutRounding = false,
+                SnapsToDevicePixels = false,
+            };
+            RenderOptions.SetBitmapScalingMode(image, scalingMode);
+            image.Arrange(new Rect(0, 0, w, h));
+            var newRect = new Rect(0, 0, newW, newH);
+
+            var dv = new DrawingVisual();
+            using (var ctx = dv.RenderOpen())
+            {
+                var vb = new VisualBrush(image);
+                vb.TileMode = TileMode.None;
+                vb.ViewboxUnits = BrushMappingMode.Absolute;
+                vb.Viewbox = newRect;
+                ctx.DrawRectangle(vb, null, newRect);
+            }
+
+            var resultSource = new RenderTargetBitmap(newW, newH, 96, 96, PixelFormats.Pbgra32);
+            resultSource.Render(dv);
+
+            this.HLeft = (ushort)transformedHotspot.X;
+            this.HTop = (ushort)transformedHotspot.Y;
+            this.Width = (byte)newW;
+            this.Height = (byte)newH;
+
+            this._BitmapFrame = BitmapFrame.Create(resultSource);
+            this._PngFile = null;
         }
 
         private void CreateBytes()

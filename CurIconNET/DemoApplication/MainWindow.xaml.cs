@@ -110,6 +110,25 @@ namespace DemoApplication
                 MessageBox.Show(ex.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private void ButtonRotate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var degrees = double.Parse(tbRotation.Text);
+                for (int i = 0; i < lsCI.FrameCount; i++)
+                {
+                    var pngFrame = lsCI[i];
+                    pngFrame.RotateFrame(degrees, BitmapScalingMode.Linear);
+                }
+                imgPreview.Source = lsCI[0].BitmapFrame;
+            }
+            catch(Exception ex)
+            {
+                MessageBox.Show(ex.ToString(), "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
         #endregion
 
         #region Construct
@@ -194,5 +213,7 @@ namespace DemoApplication
         }
 
         #endregion
+
+
     }
 }

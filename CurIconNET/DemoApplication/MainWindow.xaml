@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DemoApplication"
         mc:Ignorable="d"
-        Title="MainWindow" Height="400" Width="600">
+        Title="MainWindow" Height="500" Width="600">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -37,6 +37,12 @@
                         <Button DockPanel.Dock="Right" Content="Save as Cursor" Click="ButtonSaveCursor_Click" Margin="2" Padding="5,0" />
                         <Button DockPanel.Dock="Right" Content="Save as Icon" Click="ButtonSaveIcon_Click" Margin="2" Padding="5,0" />
                     </DockPanel>
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Left" Text="Rotate Cursor:" Margin="2" />
+                        <Button DockPanel.Dock="Right" Content="Rotate" Click="ButtonRotate_Click" Margin="2" Padding="5,0" />
+                        <TextBox Margin="2" x:Name="tbRotation" />
+                    </DockPanel>
+                    <Image x:Name="imgPreview" Width="64" Height="64" Stretch="None"/>
                 </StackPanel>
             </ScrollViewer>
         </GroupBox>
