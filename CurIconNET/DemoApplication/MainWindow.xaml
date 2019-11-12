@@ -42,7 +42,9 @@
                         <Button DockPanel.Dock="Right" Content="Rotate" Click="ButtonRotate_Click" Margin="2" Padding="5,0" />
                         <TextBox Margin="2" x:Name="tbRotation" />
                     </DockPanel>
-                    <Image x:Name="imgPreview" Width="64" Height="64" Stretch="None"/>
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Background="#20ffffff">
+                        <Image x:Name="imgPreview" Width="128" Height="128" Stretch="None" />
+                    </Grid>
                 </StackPanel>
             </ScrollViewer>
         </GroupBox>

@@ -49,5 +49,19 @@ namespace CurIconNET
         /// <param name="throwOnTooManyFrames">Set this to true if an Exception should be raised if there are more than 255 frames to save.</param>
         public abstract void Save(Stream outStream, FileType desiredFileType, bool throwOnTooManyFrames = false);
 
+        /// <summary>
+        /// Generates a new <see cref="System.Windows.Input.Cursor"/> object out of this instance.
+        /// </summary>
+        /// <param name="scaleWithDpi">true if to scale with dpi; otherwise, false.</param>
+        /// <returns>A newly generated <see cref="System.Windows.Input.Cursor"/> object.</returns>
+        public virtual System.Windows.Input.Cursor GenerateCursor(bool scaleWithDpi = false)
+        {
+            using (var ms = new MemoryStream())
+            {
+                this.Save(ms, FileType.Cursor, false);
+                ms.Position = 0;
+                return new System.Windows.Input.Cursor(ms, scaleWithDpi);
+            }
+        }
     }
 }

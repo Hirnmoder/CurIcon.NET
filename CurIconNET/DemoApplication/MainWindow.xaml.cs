@@ -119,9 +119,11 @@ namespace DemoApplication
                 for (int i = 0; i < lsCI.FrameCount; i++)
                 {
                     var pngFrame = lsCI[i];
-                    pngFrame.RotateFrame(degrees, BitmapScalingMode.Linear);
+                    pngFrame.RotateFrameKeepSize(degrees, BitmapScalingMode.NearestNeighbor);
                 }
                 imgPreview.Source = lsCI[0].BitmapFrame;
+                imgPreview.Cursor?.Dispose();
+                imgPreview.Cursor = lsCI.GenerateCursor(true);
             }
             catch(Exception ex)
             {

@@ -19,7 +19,7 @@ namespace CurIconNET.Internals
         {
             get
             {
-                if(_BitmapFrame == null && _PngFile != null)
+                if (_BitmapFrame == null && _PngFile != null)
                 {
                     CreateFrame();
                 }
@@ -33,7 +33,7 @@ namespace CurIconNET.Internals
         {
             get
             {
-                if(_PngFile == null && _BitmapFrame != null)
+                if (_PngFile == null && _BitmapFrame != null)
                 {
                     CreateBytes();
                 }
@@ -77,7 +77,7 @@ namespace CurIconNET.Internals
             if (width > 256)
             {
                 needsCrop = true;
-                if(!autocrop) throw new ArgumentException(nameof(width) + " must be less or equal to 256.");
+                if (!autocrop) throw new ArgumentException(nameof(width) + " must be less or equal to 256.");
             }
             if (height > 256)
             {
@@ -112,7 +112,7 @@ namespace CurIconNET.Internals
         /// <returns>True if the action succeeded, otherwise false.</returns>
         public bool SetHotspot(ushort left, ushort top)
         {
-            if(this._PngFile == null || (left <= this.Width && top <= this.Height))
+            if (this._PngFile == null || (left <= this.Width && top <= this.Height))
             {
                 this.HLeft = left;
                 this.HTop = top;
@@ -192,6 +192,113 @@ namespace CurIconNET.Internals
             this._PngFile = null;
         }
 
+        public bool RotateFrameKeepSize(double rotationDegrees, BitmapScalingMode scalingMode = BitmapScalingMode.NearestNeighbor)
+        {
+            var clipped = false;
+
+            var rotationRad = rotationDegrees / 180.0 * Math.PI;
+            var frame = this.BitmapFrame;
+            var w = frame.PixelWidth;
+            var h = frame.PixelHeight;
+
+            var imageRect = FindNonTransparentRect(frame);
+
+            var newW = (int)(Math.Abs(imageRect.Width * Math.Sin(rotationRad)) + Math.Abs(imageRect.Height * Math.Cos(rotationRad)));
+            var newH = (int)(Math.Abs(imageRect.Width * Math.Cos(rotationRad)) + Math.Abs(imageRect.Height * Math.Sin(rotationRad)));
+
+            if(newW > w || newH > h)
+                clipped = true;
+
+            var transformGroup = new TransformGroup();
+            var rotation = new RotateTransform(rotationDegrees);
+            rotation.CenterX = w / 2.0;
+            rotation.CenterY = h / 2.0;
+            var translate = new TranslateTransform((w - imageRect.Width) / 2.0 - imageRect.X, (h - imageRect.Height) / 2.0 - imageRect.Y);
+            transformGroup.Children.Add(translate);
+            transformGroup.Children.Add(rotation);
+
+            var origHotspot = new Point(this.HLeft, this.HTop);
+            var transformedHotspot = transformGroup.Transform(origHotspot);
+
+            var image = new Image()
+            {
+                Source = frame,
+                RenderTransform = transformGroup,
+                Width = w,
+                Height = h,
+                Stretch = Stretch.None,
+                UseLayoutRounding = false,
+                SnapsToDevicePixels = false,
+            };
+            RenderOptions.SetBitmapScalingMode(image, scalingMode);
+            image.Arrange(new Rect(0, 0, w, h));
+            var newRect = new Rect(0, 0, w, h);
+
+            var dv = new DrawingVisual();
+            using (var ctx = dv.RenderOpen())
+            {
+                var vb = new VisualBrush(image);
+                vb.TileMode = TileMode.None;
+                vb.ViewboxUnits = BrushMappingMode.Absolute;
+                vb.Viewbox = newRect;
+                ctx.DrawRectangle(vb, null, newRect);
+            }
+
+            var resultSource = new RenderTargetBitmap(w, h, 96, 96, PixelFormats.Pbgra32);
+            resultSource.Render(dv);
+
+            this.HLeft = (ushort)transformedHotspot.X;
+            this.HTop = (ushort)transformedHotspot.Y;
+            this.Width = (byte)newW;
+            this.Height = (byte)newH;
+
+            this._BitmapFrame = BitmapFrame.Create(resultSource);
+            this._PngFile = null;
+
+            return clipped;
+        }
+
+        private Int32Rect FindNonTransparentRect(BitmapSource frame)
+        {
+            if (frame.Format != PixelFormats.Bgra32)
+            {
+                frame = new FormatConvertedBitmap(frame, PixelFormats.Bgra32, null, 1);
+            }
+
+            var width = frame.PixelWidth;
+            var height = frame.PixelHeight;
+
+            var bytesPerPixel = (frame.Format.BitsPerPixel + 7) / 8;
+            var pixels = new byte[width * height * bytesPerPixel];
+            frame.CopyPixels(pixels, bytesPerPixel * width, 0);
+
+            var xMin = width;
+            var xMax = 0;
+            var yMin = height;
+            var yMax = 0;
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    if (!isTransparent(x, y))
+                    {
+                        xMin = Math.Min(xMin, x);
+                        xMax = Math.Max(xMax, x);
+                        yMin = Math.Min(yMin, y);
+                        yMax = Math.Max(yMax, y);
+                    }
+                }
+            }
+
+            return new Int32Rect(xMin, yMin, xMax - xMin, yMax - yMin);
+
+            bool isTransparent(int x, int y)
+            {
+                return pixels[(y * width + x) * bytesPerPixel + 3] == 0;
+            }
+        }
+
         private void CreateBytes()
         {
             if (this._BitmapFrame == null) throw new InvalidOperationException(nameof(this.BitmapFrame) + " is null.");
@@ -225,7 +332,7 @@ namespace CurIconNET.Internals
 
             using (var ms = new MemoryStream(this._PngFile))
             {
-                this._BitmapFrame =  BitmapFrame.Create(ms, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+                this._BitmapFrame = BitmapFrame.Create(ms, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
             }
         }
 
@@ -236,7 +343,7 @@ namespace CurIconNET.Internals
             bw.Write((byte)0);
             bw.Write((byte)0);
             bw.Write((ushort)(withHotspot ? HLeft : 0));
-            bw.Write((ushort)(withHotspot ? HTop: 0));
+            bw.Write((ushort)(withHotspot ? HTop : 0));
             bw.Write((uint)LongLength);
             bw.Write((uint)Offset);
         }
